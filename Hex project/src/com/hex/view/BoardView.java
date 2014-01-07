@@ -24,6 +24,7 @@ public class BoardView extends View{
 	private Button[][] buttons;
 	private HexGame game;
 	private Paint p;
+	private Paint background ;
 	private final static String TAG="boardView";
 	//**example variables, delete later**//
 	private float width; // width of one tile
@@ -37,6 +38,7 @@ public class BoardView extends View{
 		super(context);
 		Log.d(TAG,"building new boardView in constructor");
 		this.p=new Paint();
+		this.background=new Paint();
 		this.board=board;
 		this.game=(HexGame) context;
 		setButtons(this.game);
@@ -54,37 +56,23 @@ public class BoardView extends View{
     
 	@Override
 	public void onDraw(Canvas canvas){
-		Paint background = new Paint();
+		Log.d(TAG,"is drawing a new board");
 		background.setColor(getResources().getColor(R.color.gray));
 		canvas.drawRect(0, 0, getWidth(), getHeight(), background);	
-		/*
 		for (float i=0;i<HexBoard.BOARD_SIZE;i++){
 			for (float j=0;j<HexBoard.BOARD_SIZE;j++){
-				switch(this.board.getColorAt((int)i, (int)j)){
-					case HexBoard.EMPTY:
-						p.setColor(Color.WHITE);
-						canvas.drawRect(i,i+50,j,j+50,p);
-						break;
-					case HexBoard.COL_PLAYER:
-						p.setColor(Color.RED);
-						canvas.drawRect(i,i+50,j,j+50,p);
-						break;
-					case HexBoard.ROW_PLAYER:
-						p.setColor(Color.BLUE);
-						canvas.drawRect(i,i+50,j,j+50,p);
-						break;
-				}
+				drawHexagon(i,j, 100, canvas);
 			}
 		}
 		
-		TEST
+		/*TEST
 		Log.d(TAG,"is drawing a new board");
 		this.p=new Paint();
 		this.p.setColor(Color.RED);
 		canvas.drawLine(10, 10, 100, 100, p);*/
 					
 		
-
+		/*
 		// Draw the board...
 		// Define colors for the grid lines
 		Paint dark = new Paint();
@@ -108,7 +96,7 @@ public class BoardView extends View{
 			canvas.drawLine(0, i*height + 1, getWidth(), i*height+ 1, hilite);
 			canvas.drawLine(i*width, 0, i*width, getHeight(), dark);
 			canvas.drawLine(i*width + 1, 0, i*width + 1,getHeight(), hilite);
-		}
+		}*/
 	}
 	
 	/**We use onSizeChanged( ) to calculate the size of each tile on the screen**/
@@ -135,56 +123,71 @@ public class BoardView extends View{
 	
 	
 	/**inner class for representing a hexagon**/
-    private class Hexagon {
-        private final int[] polyY, polyX;
-        private final int polySides = 6;
+	public void drawHexagon(float x, float y, float radius,Canvas canvas) {
+        //super(pX, pY, radius, radius);
+//      setColor(1, 0, 0);
+        //setAlpha(0);
+        float x1, x2, y1, y2;
+        //float lineWidth = 3;
+        this.p.setColor(Color.WHITE);
+        float width=(float)Math.sqrt(3)*radius;
+        x1 = 0; 
+        y1 = radius / 2;
+        x2 = width / 2;
+        y2 = 0;
+        //y2 = (radius * ((2 - (float)Math.sqrt(3)) / 4));
+        canvas.drawLine(x1, y1, x2, y2,p);
+        //line.setLineWidth(lineWidth);
+        //attachChild();
+        
+        //second line
+        x1 = x2; 
+        y1 = y2;
+        x2 = width;
+        y2 = radius/2;
+        p.setColor(Color.RED);
+        canvas.drawLine(x1, y1, x2, y2,p);
+        //line.setLineWidth(lineWidth);
+        //attachChild(line);
 
-        public Hexagon(double x, double y, double r) {
-            polyX = getXCoordinates(x, y, r, 6, Math.PI / 2);
-            polyY = getYCoordinates(x, y, r, 6, Math.PI / 2);
-        }
+        //third line
+        x1 = x2; 
+        y1 = y2;
+        x2 = width;
+        y2 = radius * 1.5f;
+        canvas.drawLine(x1, y1, x2, y2,p);
+        //line.setLineWidth(lineWidth);
+        //attachChild(line);
 
-        public boolean contains(Point p) {
-            boolean oddTransitions = false;
-            for(int i = 0, j = polySides - 1; i < polySides; j = i++) {
-                if((polyY[i] < p.y && polyY[j] >= p.y) || (polyY[j] < p.y && polyY[i] >= p.y)) {
-                    if(polyX[i] + (p.y - polyY[i]) / (polyY[j] - polyY[i]) * (polyX[j] - polyX[i]) < p.x) {
-                        oddTransitions = !oddTransitions;
-                    }
-                }
-            }
-            return oddTransitions;
-        }
-        protected int[] getXCoordinates(double x, double y, double r, int vertexCount, double startAngle) {
-            int res[] = new int[vertexCount];
-            double addAngle = 2 * Math.PI / vertexCount;
-            double angle = startAngle;
-            for(int i = 0; i < vertexCount; i++) {
-                res[i] = (int) (Math.round(r * Math.cos(angle)) + x);
-                angle += addAngle;
-            }
-            return res;
-        }
+        //forth line
+        x1 = x2;
+        y1 = y2;
+        x2 = width/2;
+        y2 = radius * 2;
+        canvas.drawLine(x1, y1, x2, y2,p);
+        //line.setLineWidth(lineWidth);
+        //attachChild(line);
 
-        protected int[] getYCoordinates(double x, double y, double r, int vertexCount, double startAngle) {
-            int res[] = new int[vertexCount];
-            double addAngle = 2 * Math.PI / vertexCount;
-            double angle = startAngle;
-            for(int i = 0; i < vertexCount; i++) {
-                res[i] = (int) (Math.round(r * Math.sin(angle)) + y);
-                angle += addAngle;
-            }
-            return res;
-        }
-        protected  double radiusCalc(double w, double h, double n) {
-            double spaceV = (((n - 1) * 3 / 2) + 2);
-            double spaceH = n + (n - 1) / 2; 
-            spaceH = (w / (spaceH * Math.sqrt(3)));
-            spaceV = (h / spaceV);
-            if(spaceV < spaceH) {
-                return spaceV;
-            }
-            return spaceH;
-        }
+        //fifth line
+        x1 = x2;
+        y1 = y2;
+        x2 = 0;
+        y2= radius * 1.5f;
+        canvas.drawLine(x1, y1, x2, y2,p);
+//        line.setLineWidth(lineWidth);
+//        attachChild(line);
+
+        //sixth line
+        x1 = x2;
+        y1 = y2;
+        x2 = 0;
+        y2 = radius/2;
+        canvas.drawLine(x1, y1, x2, y2,p);
+//        line.setLineWidth(lineWidth);
+//        attachChild(line);
+
+//        touchableArea = new Rectangle(radius / 4, radius / 4, radius * .75f, radius * .75f);
+//        touchableArea.setAlpha(0);
+//        attachChild(touchableArea);
     }
 }
