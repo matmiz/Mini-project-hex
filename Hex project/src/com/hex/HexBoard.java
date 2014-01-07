@@ -7,21 +7,21 @@ package com.hex;
 public class HexBoard {
 	
 	private byte[][] board;
-	public final byte ROW_PLAYER;
-	public final byte COL_PLAYER;
-	public final byte EMPTY = 0;
-	private byte boardSize;
+	public final static byte ROW_PLAYER=2;
+	public final static byte COL_PLAYER=1;
+	public final static byte EMPTY = 0;
+	public final static byte  BOARD_SIZE=11;
 	
 	/**
 	 * Constructs a game board.
 	 * @param size The dimensions of the board
 	 */
-	public HexBoard(byte size, byte rowPlayer, byte colPlayer) {
-		ROW_PLAYER = rowPlayer;
-		COL_PLAYER = colPlayer;
-		this.boardSize =  (byte) (size + 2);
-		this.board = new byte[boardSize][boardSize];
-		colorSides();
+	public HexBoard(byte size){//, byte rowPlayer, byte colPlayer) {
+		//ROW_PLAYER = rowPlayer;
+		//COL_PLAYER = colPlayer;
+		//this.BOARD_SIZE =  (byte) (size + 2);
+		this.board = new byte[BOARD_SIZE][BOARD_SIZE];
+		//colorSides();
 	}
 	
 	/**
@@ -31,17 +31,17 @@ public class HexBoard {
 	private void colorSides(){
 		int i;
 		
-		for(i=0; i<boardSize; i++){
+		for(i=0; i<BOARD_SIZE; i++){
 			board[0][i] = ROW_PLAYER;
-			board[boardSize-1][i] = ROW_PLAYER;
+			board[BOARD_SIZE-1][i] = ROW_PLAYER;
 			
 			board[i][0] = COL_PLAYER;
-			board[i][boardSize-1] = COL_PLAYER;
+			board[i][BOARD_SIZE-1] = COL_PLAYER;
 		}
 		board[0][0] = EMPTY;
-		board[boardSize-1][0] = EMPTY;
-		board[0][boardSize-1] = EMPTY;
-		board[boardSize-1][boardSize-1] = EMPTY;
+		board[BOARD_SIZE-1][0] = EMPTY;
+		board[0][BOARD_SIZE-1] = EMPTY;
+		board[BOARD_SIZE-1][BOARD_SIZE-1] = EMPTY;
 	}
 	
 	/**
@@ -51,7 +51,7 @@ public class HexBoard {
 	 * @return The color of the [row, col] cell
 	 */
 	public int getColorAt(int row, int col){
-		return board[row+1][col+1];
+		return board[row][col];
 	}
 	
 	/**
@@ -69,9 +69,9 @@ public class HexBoard {
 	 * @return the copy of this board.
 	 */
 	public HexBoard getCopy(){
-		HexBoard newBoard = new HexBoard((byte) (boardSize-2), ROW_PLAYER, COL_PLAYER);
-		for(int i=1; i<boardSize-1; i++){
-			for(int j=1; j<boardSize-1; j++){
+		HexBoard newBoard = new HexBoard((byte) (BOARD_SIZE-2));//, ROW_PLAYER, COL_PLAYER);
+		for(int i=1; i<BOARD_SIZE-1; i++){
+			for(int j=1; j<BOARD_SIZE-1; j++){
 				newBoard.setColorAt(i-1, j-1, board[i][j]);
 			}
 		}
@@ -88,11 +88,11 @@ public class HexBoard {
 	}
 
 	public void print(int indent) {
-		for (int i = 0; i < boardSize ; i++) {
+		for (int i = 0; i < BOARD_SIZE ; i++) {
 			for(int k=0; k<=indent; k++){
 				System.out.print('\t');
 			}
-		    for (int j = 0; j < boardSize; j++) {
+		    for (int j = 0; j < BOARD_SIZE; j++) {
 		        System.out.print(board[i][j] + " ");
 		    }
 		    System.out.print("\n");

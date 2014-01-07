@@ -55,8 +55,8 @@ public class TreeNode {
 			optimalValue = 0;
 		}
 		
-		for(byte i = 0; i<HexGame.boardSize; i++){
-			for(byte j=0; j<HexGame.boardSize; j++){
+		for(byte i = 0; i<HexBoard.BOARD_SIZE; i++){
+			for(byte j=0; j<HexBoard.BOARD_SIZE; j++){
 				if(board.getColorAt(i, j) == board.EMPTY){
 					childBoard = board.getCopy();
 					childBoard.setColorAt(i, j, nextColor);
