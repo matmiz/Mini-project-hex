@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.ShapeDrawable;
@@ -50,7 +51,7 @@ public class BoardView extends View{
         this.game = game;
         buttons = new Button[HexBoard.BOARD_SIZE][HexBoard.BOARD_SIZE];
         for(int i = 0; i < HexBoard.BOARD_SIZE; i++) 
-            for(int j = 0; j < HexBoard.BOARD_SIZE; j++) 
+            for(int j = 0; j < 2; j++) 
                 buttons[i][j] = new Button(game);    
         }
     
@@ -60,43 +61,11 @@ public class BoardView extends View{
 		background.setColor(getResources().getColor(R.color.gray));
 		canvas.drawRect(0, 0, getWidth(), getHeight(), background);	
 		for (float i=0;i<HexBoard.BOARD_SIZE;i++){
-			for (float j=0;j<HexBoard.BOARD_SIZE;j++){
+			for (float j=0;j<HexBoard.BOARD_SIZE && j<=i;j++){
+				Log.d(TAG,"i is: "+i+" and j is: "+j);
 				drawHexagon(i,j, 100, canvas);
 			}
 		}
-		
-		/*TEST
-		Log.d(TAG,"is drawing a new board");
-		this.p=new Paint();
-		this.p.setColor(Color.RED);
-		canvas.drawLine(10, 10, 100, 100, p);*/
-					
-		
-		/*
-		// Draw the board...
-		// Define colors for the grid lines
-		Paint dark = new Paint();
-		dark.setColor(getResources().getColor(R.color.black));
-		Paint hilite = new Paint();
-		hilite.setColor(getResources().getColor(R.color.red));
-		Paint light = new Paint();
-		light.setColor(getResources().getColor(R.color.blue));
-		// Draw the minor grid lines
-		for (int i = 0; i < 9; i++) {
-			canvas.drawLine(0, i*height, getWidth(), i*height,light);
-			canvas.drawLine(0, i*height + 1, getWidth(), i*height+ 1, hilite);
-			canvas.drawLine(i*width, 0, i*width, getHeight(),light);
-			canvas.drawLine(i*width + 1, 0, i*width + 1,getHeight(), hilite);
-		}
-		// Draw the major grid lines
-		for (int i = 0; i < 9; i++) {
-			if (i % 3 != 0)
-			continue;
-			canvas.drawLine(0, i*height, getWidth(), i*height,dark);
-			canvas.drawLine(0, i*height + 1, getWidth(), i*height+ 1, hilite);
-			canvas.drawLine(i*width, 0, i*width, getHeight(), dark);
-			canvas.drawLine(i*width + 1, 0, i*width + 1,getHeight(), hilite);
-		}*/
 	}
 	
 	/**We use onSizeChanged( ) to calculate the size of each tile on the screen**/
@@ -123,65 +92,87 @@ public class BoardView extends View{
 	
 	
 	/**inner class for representing a hexagon**/
-	public void drawHexagon(float x, float y, float radius,Canvas canvas) {
-        //super(pX, pY, radius, radius);
+	public void drawHexagon(float i, float j, float radius,Canvas canvas) {
+        
+		//super(pX, pY, radius, radius);
 //      setColor(1, 0, 0);
         //setAlpha(0);
         float x1, x2, y1, y2;
         //float lineWidth = 3;
         this.p.setColor(Color.WHITE);
         float width=(float)Math.sqrt(3)*radius;
-        x1 = 0; 
-        y1 = radius / 2;
-        x2 = width / 2;
-        y2 = 0;
+        float dX=width/2;
+        float dY=radius/2;
+		/*Path path = new Path();
+        path.moveTo(2*i*dX,dY+radius*j);
+        path.lineTo(dX+(2*i*dX),dY*j);
+        path.lineTo( 2*(i+1)*dX, dY+radius*j);
+        path.lineTo(2*(i+1)*dX, dY+((j+1)*radius));
+        path.lineTo(dX+(2*i*dX), radius*(j+2));
+        path.lineTo( 2*i*dX,dY+((j+1)*radius));
+        path.close();
+        canvas.drawPath(path, p);*/
+        this.p.setColor(Color.CYAN);
+        if(j==0)
+        	x1 = i*2*dX;
+        else
+        	x1 = (i+j)*2*dX-(2.6f*j*radius);
+        y1 = (1+(3*j))/2*radius;
+        x2 = dX+x1;
+        y2 = 1.5f*radius*j;
+        
         //y2 = (radius * ((2 - (float)Math.sqrt(3)) / 4));
         canvas.drawLine(x1, y1, x2, y2,p);
         //line.setLineWidth(lineWidth);
         //attachChild();
         
-        //second line
+        //second line RED
         x1 = x2; 
         y1 = y2;
-        x2 = width;
-        y2 = radius/2;
+        x2 = dX+x1;
+        y2 = (1+(3*j))/2*radius;
         p.setColor(Color.RED);
+        Log.d(TAG,"x1: "+x1+" y1: "+y1+" x2: "+x2+" y2:"+y2);
         canvas.drawLine(x1, y1, x2, y2,p);
         //line.setLineWidth(lineWidth);
         //attachChild(line);
 
-        //third line
+        //third line BLUE
         x1 = x2; 
         y1 = y2;
-        x2 = width;
-        y2 = radius * 1.5f;
+        x2 = x1;
+        y2 = y1+radius;
+        p.setColor(Color.BLUE);
         canvas.drawLine(x1, y1, x2, y2,p);
         //line.setLineWidth(lineWidth);
         //attachChild(line);
 
-        //forth line
+        //forth line black
         x1 = x2;
         y1 = y2;
-        x2 = width/2;
-        y2 = radius * 2;
+        x2 = x1-dX;
+        y2 = y1+dY;
+        p.setColor(Color.BLACK);
         canvas.drawLine(x1, y1, x2, y2,p);
         //line.setLineWidth(lineWidth);
         //attachChild(line);
 
-        //fifth line
+        //fifth line yellow
         x1 = x2;
         y1 = y2;
-        x2 = 0;
-        y2= radius * 1.5f;
+        x2 = x1-dX;
+        y2= y1-dY;
+        p.setColor(Color.YELLOW);
         canvas.drawLine(x1, y1, x2, y2,p);
 //        line.setLineWidth(lineWidth);
 //        attachChild(line);
 
-        //sixth line
+        //sixth line green 
         x1 = x2;
         y1 = y2;
-        x2 = 0;
-        y2 = radius/2;
+        x2 = x1;
+        y2 = y1-radius;
+        p.setColor(Color.GREEN);
         canvas.drawLine(x1, y1, x2, y2,p);
 //        line.setLineWidth(lineWidth);
 //        attachChild(line);
@@ -190,4 +181,56 @@ public class BoardView extends View{
 //        touchableArea.setAlpha(0);
 //        attachChild(touchableArea);
     }
+        /*
+        float h = (float) (Math.sin(DegreesToRadians(30)) * radius);
+        float r = (float) (Math.sin(DegreesToRadians(30)) * radius);
+        float[] points = new float[24];
+        float x=dX+(2*i*radius);
+        float y=1.5f*radius*j;
+        points=setPoints(x,y,radius,h,r);
+        canvas.drawLines(points, p);
+        //points[0] = new Point(x, y);
+        //points[1] = new Point(x + r, y + h);
+        //points[2] = new Point(x + r, y + radius + h);
+        //points[3] = new Point(x, y + radius + h + h);
+        //points[4] = new Point(x - r, y + radius + h);
+        //points[5] = new Point(x - r, y + h);
+	}
+	private float[]setPoints(float x,float y,float radius,float h,float r){
+		float[]ans=new float[24];
+		ans[0]=x;
+		ans[1]=y;
+		ans[2]=x+r;
+		ans[3]=y + h;
+		
+		ans[4]=x+r;
+		ans[5]=y + h;
+		ans[6]=x+r;
+		ans[7]=y + radius + h;
+		
+		ans[8]=x+r;
+		ans[9]=y + radius + h;
+		ans[10]=x;
+		ans[11]=y + radius + (2*h);
+		
+		ans[12]=x;
+		ans[13]=y + radius + (2*h);
+		ans[14]=x - r;
+		ans[15]=y + radius + h;
+
+		ans[16]=x - r;
+		ans[17]=y + radius + h;
+		ans[18]=x - r;
+		ans[19]=y + h;
+		
+		ans[20]=x - r;
+		ans[21]=y + h;
+		ans[22]=x;
+		ans[23]=y ;
+		return ans;
+	}
+	public static double DegreesToRadians(double degrees)
+	{
+	    return degrees * Math.PI / 180;
+	}*/
 }
