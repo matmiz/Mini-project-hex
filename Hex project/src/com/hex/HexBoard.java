@@ -99,4 +99,9 @@ public class HexBoard {
 		}
 		System.out.print("\n");
 	}
+
+	public void addPeon(float x, float y) {
+		
+		
+	}
 }

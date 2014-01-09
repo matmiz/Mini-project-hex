@@ -4,12 +4,17 @@ import com.hex.view.BoardView;
 import com.hex.view.HexView;
 
 import android.app.Activity;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 
-public class HexGame extends Activity implements OnClickListener {
+public class HexGame extends Activity implements OnTouchListener {
 
 	private HexBoard board;
 	private MinMaxGameTree gameTree;
@@ -39,8 +44,7 @@ public class HexGame extends Activity implements OnClickListener {
 		BoardView bView=new BoardView(this,board);
 		this.hView= new HexView(this);
 		Log.d(TAG,"created board vieW");
-		//hView.setView(bView);
-		
+		hView.setView(bView);
 		setContentView(bView);
 	}
 			
@@ -59,8 +63,20 @@ public class HexGame extends Activity implements OnClickListener {
 	}
 
 	@Override
-	public void onClick(View v) {
-		//TODO
+	public boolean onTouchEvent(MotionEvent event) {
+		float x = event.getRawX();
+		float y = event.getRawY();
+		Canvas canvas=new Canvas();
+		Paint p = new Paint();
+		p.setColor(Color.RED);
+		this.board.addPeon(x,y);
+		return false;
+	}
+
+	@Override
+	public boolean onTouch(View arg0, MotionEvent arg1) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 }
