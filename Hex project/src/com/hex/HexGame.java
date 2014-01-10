@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 
-public class HexGame extends Activity implements OnTouchListener {
+public class HexGame extends Activity {
 
 	private HexBoard board;
 	private MinMaxGameTree gameTree;
@@ -62,21 +62,5 @@ public class HexGame extends Activity implements OnTouchListener {
 		return gameTree.size();
 	}
 
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		float x = event.getRawX();
-		float y = event.getRawY();
-		Canvas canvas=new Canvas();
-		Paint p = new Paint();
-		p.setColor(Color.RED);
-		this.board.addPeon(x,y);
-		return false;
-	}
-
-	@Override
-	public boolean onTouch(View arg0, MotionEvent arg1) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 }

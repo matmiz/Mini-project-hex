@@ -1,7 +1,7 @@
 package com.hex.view;
-/** Peon view class**/
+/** game piece view class**/
 
-import com.hex.Peon;
+import com.hex.GamePiece;
 
 import android.content.Context;
 import android.view.View;
@@ -10,10 +10,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 
 
-public class PeonView extends View{
-	private Peon peon;
+public class GamePieceView extends View{
+	private GamePiece peon;
 	
-	public PeonView(Context context) {
+	public GamePieceView(Context context) {
 		super(context);
 	}
 	private Paint getPeonColor(){
