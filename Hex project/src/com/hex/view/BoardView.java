@@ -65,9 +65,7 @@ public class BoardView extends View{
         for(int i = 0; i < HexBoard.BOARD_SIZE; i++) 
             for(int j = 0; j < HexBoard.BOARD_SIZE; j++){ 
                 buttons[i][j] = new Button(game);  
-                buttons[i][j].setPressed(false);
             }
-        		
         }
     
 	@Override
@@ -75,25 +73,118 @@ public class BoardView extends View{
 		canvas.drawRect(0, 0, getWidth(), getHeight(), this.background);	
 		for (float i=0;i<HexBoard.BOARD_SIZE;i++){
 			for (float j=0;j<HexBoard.BOARD_SIZE && j<=i;j++){
-				drawHexagon(i,j, HexBoard.RADIUS, canvas);
+				paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.WHITE,true);
+				drawHexLines(i,j,canvas,HexBoard.RADIUS);
 			}
 		}
 		for (float j=HexBoard.BOARD_SIZE;j<2*HexBoard.BOARD_SIZE;j++){
-				for(float i=j-10 ;i <= HexBoard.BOARD_SIZE-1 ;i++)
-					drawHexagon(j,i, HexBoard.RADIUS, canvas);
+				for(float i=j-10 ;i < HexBoard.BOARD_SIZE ;i++){
+					paintHexagon(j,i,HexBoard.RADIUS,canvas,Color.WHITE,true);
+					drawHexLines(j,i,canvas,HexBoard.RADIUS);
+					}
 				}
-	  //paintHexagon(6, 5, 30, canvas, Color.BLUE, false);
+		checkButtons(canvas);
 	}
 	
-	/**We use onSizeChanged( ) to calculate the size of each tile on the screen**/
+	
+	/**We use onSizeChanged to calculate the size of each tile on the screen**/
 	@Override 
 	public void onSizeChanged(int w, int h, int oldw, int oldh) {
 		//TODO change to be compatible with hexagons
 		}
 	
-	public void drawHexagon(float i, float j, float radius,Canvas canvas) {
-        float x1, x2, y1, y2;
-        //this.p.setColor(Color.WHITE);
+	public void checkButtons(Canvas canvas) { 
+		for(int i=0;i<HexBoard.BOARD_SIZE;i++)
+			for(int j=0;j<HexBoard.BOARD_SIZE;j++){
+				if(buttons[i][j].isPressed()){
+					Log.d("PressedButton","painting on i="+i+" and j="+j);
+					paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.RED,false);
+//					drawHexLines(i,j,canvas,HexBoard.RADIUS);
+				}
+			}
+	}
+	
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		if(event.getAction()==MotionEvent.ACTION_DOWN){
+			float px = event.getX() + this.values[3];
+			float py = event.getY() + this.values[1] /2;
+			int gridX = (int)px / (int)this.values[4];
+			int gridY = (int)py / (int)this.values[2];
+			double resultY=gridY;
+			double resultX=gridX; 
+			int gridModX = (int)px % (int)this.values[4];
+			int gridModY = (int)py % (int)this.values[2];
+			boolean gridType=false;
+			float scale = this.values[5] / this.values[3]; 
+			if (((int)gridY &1) ==0)
+				gridType =true; 
+			if(gridType){
+				{
+					// middle hexagon
+					resultY = gridY;
+					resultX = gridX;
+					// left hexagon
+					if (gridModY < (this.values[5] - gridModX * scale))
+					{
+						resultY = gridY -1;
+						resultX = gridX -1;
+					}
+					// right hexagon
+					if (gridModY < (-this.values[5] + gridModX * scale))
+					{
+						resultY = gridY -1;
+						resultX = gridX;
+					}
+				}
+			}
+			else
+			{
+				if (gridModX >= this.values[3])
+				{
+					if (gridModY < (2* this.values[5] - gridModX * scale))
+					{
+						// Top hexagon
+						resultY = gridY -1;
+						resultX = gridX;
+					}
+					else
+					{
+						// Right hexagon
+						resultY = gridY;
+						resultX = gridX;
+					}
+				}
+				if (gridModX < this.values[3])
+				{
+					if (gridModY < (gridModX * scale))
+					{
+						// Top hexagon
+						resultY = gridY -1;
+						resultX = gridX;
+					}
+					else
+					{
+						// Left hexagon
+						resultY = gridY;
+						resultX = gridX -1;
+					}
+				}
+			} 
+			resultY--;
+			resultX-=(Math.ceil(resultY/2));
+			Log.d("onTOuchEvent","on touch event x: "+resultX+". y:"+resultY);
+			this.buttons[(int)resultY][(int)resultX].setPressed(true);
+			postInvalidate();
+			return super.onTouchEvent(event);
+		}
+		return false;
+	}
+	
+	private void drawHexLines(float i,float j,Canvas canvas,float radius){
+        float x1,x2,y1,y2;
+        Paint p=new Paint();
+        p.setColor(Color.BLACK);
         float width=(float)Math.sqrt(3)*radius;
         float dX=width/2;
         float dY=radius/2;
@@ -104,15 +195,6 @@ public class BoardView extends View{
         y1 = (1+(3*j))/2*radius;
         x2 = dX+x1;
         y2 = 1.5f*radius*j;
-        //fill the shapes
-        if(buttons[(int)i%HexBoard.BOARD_SIZE][(int)j%HexBoard.BOARD_SIZE].isPressed()){
-        	Log.d("PressedButton","painting on i="+i%HexBoard.BOARD_SIZE+" and j="+j%HexBoard.BOARD_SIZE);
-        	paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.RED,false);
-        	}
-        else
-        	paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.WHITE,true);
-        //draw the lines
-        this.p.setColor(Color.BLACK);
         canvas.drawLine(x1, y1, x2, y2,p);
         x1 = x2; 
         y1 = y2;
@@ -139,92 +221,16 @@ public class BoardView extends View{
         x2 = x1;
         y2 = y1-radius;
         canvas.drawLine(x1, y1, x2, y2,p);
-        
-    }
+        }
 	
-	//[  0    |   1    |    2      |     3     |   4   |     5      ]
-	//[Radius | Height | RowHeight | HalfWidth | WIdth | ExtraHeight]
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-	    float px = event.getX() + this.values[3];
-	    float py = event.getY() + this.values[1] /2;
-		int gridX = (int)px / (int)this.values[4];
-		int gridY = (int)py / (int)this.values[2];
-		int resultY=gridY;
-		int resultX=gridX; 
-		int gridModX = (int)px % (int)this.values[4];
-		int gridModY = (int)py % (int)this.values[2];
-		boolean gridType=false;
-		float scale = this.values[5] / this.values[3]; 
-		if (((int)gridY &1) ==0)
-			gridType =true; 
-		if(gridType){
-			{
-				// middle hexagon
-				resultY = gridY;
-				resultX = gridX;
-				// left hexagon
-				if (gridModY < (this.values[5] - gridModX * scale))
-				{
-					resultY = gridY -1;
-					resultX = gridX -1;
-				}
-				// right hexagon
-				if (gridModY < (-this.values[5] + gridModX * scale))
-				{
-					resultY = gridY -1;
-					resultX = gridX;
-				}
-			}
-		}
-		else
-	    {
-	        if (gridModX >= this.values[3])
-	        {
-	            if (gridModY < (2* this.values[5] - gridModX * scale))
-	            {
-	                // Top hexagon
-	                resultY = gridY -1;
-	                resultX = gridX;
-	            }
-	            else
-	            {
-	                // Right hexagon
-	                resultY = gridY;
-	                resultX = gridX;
-	            }
-	        }
-	        if (gridModX < this.values[3])
-	        {
-	            if (gridModY < (gridModX * scale))
-	            {
-	                // Top hexagon
-	                resultY = gridY -1;
-	                resultX = gridX;
-	            }
-	            else
-	            {
-	                // Left hexagon
-	                resultY = gridY;
-	                resultX = gridX -1;
-	            }
-	        }
-	    } 
-		Log.d("onTOuchEvent","on touch event x: "+resultX);
-		Log.d("onTOuchEvent","on touch event y: "+resultY);
-		this.buttons[(int)(resultX % HexBoard.BOARD_SIZE)-1][(int)(resultY % HexBoard.BOARD_SIZE)-1].setPressed(true);
-		postInvalidate();
-		return true;
-	}
-	
-	public void paintHexagon(float i, float j, float radius,Canvas canvas,int c,Boolean isCreating) {
+	public void paintHexagon(float i, float j, float radius,Canvas canvas,int c,boolean isCreating) {
         float x1, x2, y1, y2;
         float width=(float)Math.sqrt(3)*radius;
         float dX=width/2;
         float dY=radius/2;
 		Path path = new Path();
 		this.p.setColor(c);
-		Log.d("paintHexagon","painting on "+i+","+j+" with color "+c);
+		//Log.d("paintHexagon","painting on "+i+","+j+" with color "+c);
         if(!isCreating){
     		j=j+i;
         	float tmp=i;
