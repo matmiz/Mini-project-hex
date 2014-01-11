@@ -1,20 +1,16 @@
 package com.hex;
 
-import com.hex.view.BoardView;
-import com.hex.view.HexView;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+
 import android.os.Bundle;
 import android.app.Activity;
 import android.util.Log;
-import android.view.Menu;
 import android.content.Intent;
 import android.view.View;
 import android.view.View.OnClickListener;
 
 public class MainActivity extends Activity  implements OnClickListener{
-	private HexBoard board;
-	private HexView hView;
+	//private HexBoard board;
+	//private HexView hView;
 	private final static String TAG="main";
 	
 	@Override

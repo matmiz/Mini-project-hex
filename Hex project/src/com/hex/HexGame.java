@@ -1,28 +1,23 @@
 package com.hex;
 
 import com.hex.view.BoardView;
-import com.hex.view.HexView;
+//import com.hex.view.HexView;
 
 import android.app.Activity;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
+
 
 public class HexGame extends Activity {
 
 	private HexBoard board;
 	private MinMaxGameTree gameTree;
-	public final byte ME = 2;
-	public final byte OPPONENT = 1;
-	public final byte EMPTY = 0;
-	private HexView hView;
+	public final static byte ME = 2;
+	public final static byte OPPONENT = 1;
+	public final static byte EMPTY = 0;
+	//private HexView hView;
 	private final static String TAG="hexGame";
+	public static boolean PLAYING;
 	/**
 	 * Creates a hex game
 	 * @param size The size of the game board.
@@ -42,9 +37,10 @@ public class HexGame extends Activity {
 		board=new HexBoard(HexBoard.BOARD_SIZE);
 		Log.d(TAG,"creating board view");
 		BoardView bView=new BoardView(this,board);
-		this.hView= new HexView(this);
+		//this.hView= new HexView(this);
+		PLAYING=true;
 		Log.d(TAG,"created board vieW");
-		hView.setView(bView);
+		//hView.setView(bView);
 		setContentView(bView);
 	}
 			
