@@ -74,11 +74,9 @@ public class BoardView extends View{
 		for(int i=0;i<HexBoard.BOARD_SIZE;i++)
 			for(int j=0;j<HexBoard.BOARD_SIZE;j++){
 				if(buttons[i][j].isPressed() && buttons[i][j].getId()==HexGame.ME)
-//					Log.d("PressedButton","painting on i="+i+" and j="+j);
 						paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.RED,false);
 					else if(buttons[i][j].getId()==HexGame.OPPONENT)
 						paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.BLUE,false);
-//					drawHexLines(i,j,canvas,HexBoard.RADIUS);
 			}
 	}
 	
