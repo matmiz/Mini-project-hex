@@ -1,4 +1,5 @@
 package com.hex;
+
 public class BoardNetwork {
 
 	public BoardNetwork(HexBoard board) {

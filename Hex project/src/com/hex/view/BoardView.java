@@ -2,40 +2,30 @@ package com.hex.view;
 /** Board view class**/
 import com.hex.HexBoard;
 import com.hex.HexGame;
-import com.hex.MainActivity;
-import com.hex.R;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.drawable.ShapeDrawable;
 
 public class BoardView extends View{
 	//private HexBoard board;
 	private Button[][] buttons;
 	private HexGame game;
 	private Paint background,redPlayer,bluePlayer,p ;
-	private final static String TAG="boardView";
 	private float[] hexValues;
 	
-	public BoardView(Context context, HexBoard board){
+	public BoardView(Context context){//, HexBoard board){
 		super(context);
-		Log.d(TAG,"building new boardView in constructor");
+		Log.d("BoardView","creating new board view in bpad view");
 		this.p=new Paint();
 		this.background=new Paint();
 		this.redPlayer=new Paint();
@@ -54,6 +44,7 @@ public class BoardView extends View{
     
 	@Override
 	public void onDraw(Canvas canvas){
+		Log.d("onDraw","Drawing the board");
 		canvas.drawRect(0, 0, getWidth(), getHeight(), this.background);
 		if(HexGame.PLAYING)
 			canvas.drawRect(0, getHeight()/1.5f,getWidth(), getWidth()/2, this.redPlayer);
@@ -73,19 +64,12 @@ public class BoardView extends View{
 		drawLines(canvas);
 	}
 	
-	
-	/**We use onSizeChanged to calculate the size of each tile on the screen**/
-	@Override 
-	public void onSizeChanged(int w, int h, int oldw, int oldh) {
-		//TODO change to be compatible with hexagons
-		}
-	
 	private void checkButtons(Canvas canvas) { 
 		for(int i=0;i<HexBoard.BOARD_SIZE;i++)
 			for(int j=0;j<HexBoard.BOARD_SIZE;j++){
-				if(buttons[i][j].isPressed() && buttons[i][j].getId()==HexGame.ME)
+				if(buttons[i][j].isPressed() && buttons[i][j].getId()==HexGame.OPPONENT)
 						paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.RED,false);
-					else if(buttons[i][j].getId()==HexGame.OPPONENT)
+					else if(buttons[i][j].getId()==HexGame.ME)
 						paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.BLUE,false);
 			}
 	}
@@ -97,20 +81,26 @@ public class BoardView extends View{
 			//Log.d("onTOuchEvent","on touch event x: "+hexX+". y:"+hexY);
 			if((results[1]<=HexBoard.BOARD_SIZE-1) && (results[1]>=0) && (results[0]<=HexBoard.BOARD_SIZE-1) && (results[0]>=0) ){
 				pressButton((int)results[0],(int)results[1]);
-				//if(moved((int)results[0],(int)results[1]))
-					//endGameDialog("Congratulations! You won!")
-				//else{
-					//int[] next=getNextMove();
-					//pressButton(next[0],next[1]);
-				//if(next[2]==1)
-            		//endGameDialog("Oh darn! you lost!");
-			//}
+				Log.d("onTouch","result0: "+results[0]+" result1: "+results[1]);
+				invalidate();
+				if(this.game.moved((int)results[0],(int)results[1])){
+					invalidate();
+					endGameDialog("Congratulations! You won!");
+				}
+				else{
+					int[] next=this.game.getNexMove();
+					pressButton(next[0],next[1]);
+					Log.d("onTouch","next-: "+next[0]+" next1: "+next[1]);
+					if(next[2]==1){
+						invalidate();
+						endGameDialog("Oh darn! you lost!");
+					}
+				}
+				return super.onTouchEvent(event);
 			}
-			return super.onTouchEvent(event);
 		}
 		return false;
 	}
-	
 	private void endGameDialog(String msg){
 		AlertDialog.Builder builder = new AlertDialog.Builder(this.game);
         builder.setMessage(msg);
@@ -138,10 +128,10 @@ public class BoardView extends View{
 			b.setPressed(true);
 			b.setEnabled(false);
 			if(HexGame.PLAYING)
-				b.setId(HexGame.ME);
-			else
 				b.setId(HexGame.OPPONENT);
-			postInvalidate();
+			else
+				b.setId(HexGame.ME);
+			//invalidate();
 			HexGame.PLAYING=!HexGame.PLAYING;
 		}
 	}
