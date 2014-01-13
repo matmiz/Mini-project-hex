@@ -11,7 +11,7 @@ import android.view.View.OnClickListener;
 public class MainActivity extends Activity  implements OnClickListener{
 	//private HexBoard board;
 	//private HexView hView;
-	private final static String TAG="main";
+	//private final static String TAG="main";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -33,10 +33,10 @@ public class MainActivity extends Activity  implements OnClickListener{
 		}
 	}
 	
-	private void startGame(){
-		Log.d(TAG, "clicked on start");
+	public void startGame(){
+		//Log.d(TAG, "clicked on start");
 		Intent intent = new Intent(this,HexGame.class);
-		Log.d(TAG, "starting intent");
+		//Log.d(TAG, "starting intent");
 		startActivity(intent);
 		}
 

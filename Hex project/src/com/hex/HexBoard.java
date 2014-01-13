@@ -10,7 +10,7 @@ public class HexBoard {
 	public final static byte ROW_PLAYER=2;
 	public final static byte COL_PLAYER=1;
 	public final static byte EMPTY = 0;
-	public final static byte  BOARD_SIZE=7;
+	public final static byte  BOARD_SIZE=8;
 	public final static byte  RADIUS=35;
 	
 	/**

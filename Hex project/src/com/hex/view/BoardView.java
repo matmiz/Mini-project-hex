@@ -2,9 +2,14 @@ package com.hex.view;
 /** Board view class**/
 import com.hex.HexBoard;
 import com.hex.HexGame;
+import com.hex.MainActivity;
 import com.hex.R;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
@@ -21,11 +26,10 @@ import android.graphics.Rect;
 import android.graphics.drawable.ShapeDrawable;
 
 public class BoardView extends View{
-	private HexBoard board;
+	//private HexBoard board;
 	private Button[][] buttons;
 	private HexGame game;
-	private Paint p;
-	private Paint background ;
+	private Paint background,redPlayer,bluePlayer,p ;
 	private final static String TAG="boardView";
 	private float[] hexValues;
 	
@@ -34,10 +38,13 @@ public class BoardView extends View{
 		Log.d(TAG,"building new boardView in constructor");
 		this.p=new Paint();
 		this.background=new Paint();
-		this.board=board;
+		this.redPlayer=new Paint();
+		this.bluePlayer=new Paint();
 		this.game=(HexGame) context;
 		this.hexValues=HexValues();
 		background.setColor(Color.GRAY);
+		redPlayer.setColor(Color.RED);
+		bluePlayer.setColor(Color.BLUE); 
 		setButtons(this.game);
 		setFocusable(true);
 		setFocusableInTouchMode(true);
@@ -47,20 +54,23 @@ public class BoardView extends View{
     
 	@Override
 	public void onDraw(Canvas canvas){
-		canvas.drawRect(0, 0, getWidth(), getHeight(), this.background);	
+		canvas.drawRect(0, 0, getWidth(), getHeight(), this.background);
+		if(HexGame.PLAYING)
+			canvas.drawRect(0, getHeight()/1.5f,getWidth(), getWidth()/2, this.redPlayer);
+		else
+			canvas.drawRect(getHeight()/1.5f,0, getWidth()/2, getWidth(), this.bluePlayer);
 		for (float i=0;i<HexBoard.BOARD_SIZE;i++){
 			for (float j=0;j<HexBoard.BOARD_SIZE && j<=i;j++){
 				paintHexagon(i,j,HexBoard.RADIUS,canvas,Color.WHITE,true);
-				drawHexLines(i,j,canvas,HexBoard.RADIUS);
 			}
 		}
 		for (float j=HexBoard.BOARD_SIZE;j<2*HexBoard.BOARD_SIZE;j++){
 				for(float i=j-(HexBoard.BOARD_SIZE-1) ;i < HexBoard.BOARD_SIZE ;i++){
 					paintHexagon(j,i,HexBoard.RADIUS,canvas,Color.WHITE,true);
-					drawHexLines(j,i,canvas,HexBoard.RADIUS);
 					}
 				}
 		checkButtons(canvas);
+		drawLines(canvas);
 	}
 	
 	
@@ -84,30 +94,62 @@ public class BoardView extends View{
 	public boolean onTouchEvent(MotionEvent event) {
 		if(event.getAction()==MotionEvent.ACTION_DOWN){
 			double results[]=pixelToHex(event);
-			//Log.d("onTOuchEvent","on touch event x: "+resultX+". y:"+resultY);
+			//Log.d("onTOuchEvent","on touch event x: "+hexX+". y:"+hexY);
 			if((results[1]<=HexBoard.BOARD_SIZE-1) && (results[1]>=0) && (results[0]<=HexBoard.BOARD_SIZE-1) && (results[0]>=0) ){
-				Button b=this.buttons[(int)results[0]][(int)results[1]];
-				if(b.isEnabled()){
-					b.setPressed(true);
-					b.setEnabled(false);
-					if(HexGame.PLAYING)
-						b.setId(HexGame.ME);
-					else
-						b.setId(HexGame.OPPONENT);
-					postInvalidate();
-					HexGame.PLAYING=!HexGame.PLAYING;
-				}
+				pressButton((int)results[0],(int)results[1]);
+				//if(moved((int)results[0],(int)results[1]))
+					//endGameDialog("Congratulations! You won!")
+				//else{
+					//int[] next=getNextMove();
+					//pressButton(next[0],next[1]);
+				//if(next[2]==1)
+            		//endGameDialog("Oh darn! you lost!");
+			//}
 			}
 			return super.onTouchEvent(event);
 		}
 		return false;
 	}
 	
+	private void endGameDialog(String msg){
+		AlertDialog.Builder builder = new AlertDialog.Builder(this.game);
+        builder.setMessage(msg);
+        builder.setCancelable(true);
+        builder.setPositiveButton("Start a new game",
+                new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+            	Intent intent = new Intent (game,  game.getClass() );            	getContext().startActivity(intent);
+            }
+        });
+        builder.setNegativeButton("Exit",
+                new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+            	((Activity) getContext()).finish();
+            }
+        });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+	}
+	
+	public void pressButton(int i,int j){
+		Button b=this.buttons[i][j];
+		if(b.isEnabled()){
+			b.setPressed(true);
+			b.setEnabled(false);
+			if(HexGame.PLAYING)
+				b.setId(HexGame.ME);
+			else
+				b.setId(HexGame.OPPONENT);
+			postInvalidate();
+			HexGame.PLAYING=!HexGame.PLAYING;
+		}
+	}
 	
 	private float[] HexValues()
 	{	// some useful values for representing hex shape
 		//[  0    |   1    |    2      |     3     |   4   |     5      ]
-		//[Radius | Height | RowHeight | HalfWidth | WIdth | ExtraHeight]
+		//[Radius | Height | RowHeight | HalfWidth | Width | ExtraHeight]
 		float [] values=new float[6];
 		values[0] = HexBoard.RADIUS;
 	    values[1] =2* values[0];
@@ -130,75 +172,87 @@ public class BoardView extends View{
 	//converts the pixels that were clicked to the hexagon that those pixels are in it.
 	private double[] pixelToHex(MotionEvent event){
 		double results[]=new double[2];
-		float px = event.getX() + this.hexValues[3];
-		float py = event.getY() + this.hexValues[1] /2;
-		int gridX = (int)px / (int)this.hexValues[4];
-		int gridY = (int)py / (int)this.hexValues[2];
-		double resultY=gridY;
-		double resultX=gridX; 
-		int gridModX = (int)px % (int)this.hexValues[4];
-		int gridModY = (int)py % (int)this.hexValues[2];
+		float x = event.getX() + this.hexValues[3];
+		float y = event.getY() + this.hexValues[1] /2;
+		int matrixX = (int)x / (int)this.hexValues[4];
+		int matrixY = (int)y / (int)this.hexValues[2]; 
+		int mX = (int)x % (int)this.hexValues[4];
+		int mY = (int)y % (int)this.hexValues[2];
+		double hexY=matrixY;
+		double hexX=matrixX;
 		boolean gridType=false;
 		float scale = this.hexValues[5] / this.hexValues[3]; 
-		if (((int)gridY &1) ==0)
-			gridType =true; 
-		if(gridType){
+		if (((int)matrixY & 1) == 0)
+			gridType = true; 
+		if(!gridType){
+			if (mX >= this.hexValues[3])
 			{
-				// middle hexagon
-				resultY = gridY;
-				resultX = gridX;
-				// left hexagon
-				if (gridModY < (this.hexValues[5] - gridModX * scale))
-				{
-					resultY = gridY -1;
-					resultX = gridX -1;
-				}
-				// right hexagon
-				if (gridModY < (-this.hexValues[5] + gridModX * scale))
-				{
-					resultY = gridY -1;
-					resultX = gridX;
-				}
-			}
-		}
-		else
-		{
-			if (gridModX >= this.hexValues[3])
-			{
-				if (gridModY < (2* this.hexValues[5] - gridModX * scale))
+				if (mY < (2* this.hexValues[5] - mX * scale))
 				{
 					// Top hexagon
-					resultY = gridY -1;
-					resultX = gridX;
+					hexY = matrixY -1;
+					hexX = matrixX;
 				}
 				else
 				{
 					// Right hexagon
-					resultY = gridY;
-					resultX = gridX;
+					hexY = matrixY;
+					hexX = matrixX;
 				}
 			}
-			if (gridModX < this.hexValues[3])
+			if (mX < this.hexValues[3])
 			{
-				if (gridModY < (gridModX * scale))
+				if (mY < (mX * scale))
 				{
 					// Top hexagon
-					resultY = gridY -1;
-					resultX = gridX;
+					hexY = matrixY -1;
+					hexX = matrixX;
 				}
 				else
 				{
 					// Left hexagon
-					resultY = gridY;
-					resultX = gridX -1;
+					hexY = matrixY;
+					hexX = matrixX -1;
 				}
 			}
-		} 
-		resultY--;
-		resultX-=(Math.ceil(resultY/2));
-		results[0]=resultY;
-		results[1]=resultX;
+		}
+		else{
+			{
+				// middle hexagon
+				hexY = matrixY;
+				hexX = matrixX;
+				// left hexagon
+				if (mY < (this.hexValues[5] - mX * scale))
+				{
+					hexY = matrixY -1;
+					hexX = matrixX -1;
+				}
+				// right hexagon
+				if (mY < (-this.hexValues[5] + mX * scale))
+				{
+					hexY = matrixY -1;
+					hexX = matrixX;
+				}
+			}
+		}
+		hexY--;
+		hexX-=(Math.ceil(hexY/2));
+		results[0]=hexY;
+		results[1]=hexX;
 		return results;
+	}
+	
+	private void drawLines(Canvas canvas){
+		for (float i=0;i<HexBoard.BOARD_SIZE;i++){
+			for (float j=0;j<HexBoard.BOARD_SIZE && j<=i;j++){
+				drawHexLines(i,j,canvas,HexBoard.RADIUS);
+			}
+		}
+		for (float j=HexBoard.BOARD_SIZE;j<2*HexBoard.BOARD_SIZE;j++){
+				for(float i=j-(HexBoard.BOARD_SIZE-1) ;i < HexBoard.BOARD_SIZE ;i++){
+					drawHexLines(j,i,canvas,HexBoard.RADIUS);
+					}
+				}
 	}
 	private void drawHexLines(float i,float j,Canvas canvas,float radius){
         float x1,x2,y1,y2;
