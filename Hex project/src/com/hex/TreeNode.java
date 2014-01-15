@@ -71,7 +71,6 @@ public class TreeNode {
 			}
 			return this.evaluation;
 		}
-		
 		//its not a leaf.
 		
 		if(nextMove == tree.max){
@@ -100,7 +99,7 @@ public class TreeNode {
 					}
 				}
 			}
-			this.board = null;
+			//this.board = null;
 			
 		}else{
 			for(TreeNode tn : this.children){
@@ -155,6 +154,7 @@ public class TreeNode {
 	 * @param depth used for indentation. 0 at the beginning.
 	 */
 	public void print(int depth) {
+		if(depth>2) return;
 		this.board.print(depth);
 		if(children!=null){
 			for(TreeNode s : children){

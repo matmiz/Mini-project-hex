@@ -1,5 +1,4 @@
 package com.hex;
-
 /**
  * Represents the board of the Hex Game as a 2-d matrix.<br>
  */

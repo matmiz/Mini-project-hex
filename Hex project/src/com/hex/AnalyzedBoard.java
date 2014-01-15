@@ -188,6 +188,7 @@ public class AnalyzedBoard {
 		}
 		rowValue = calculateBoardValue(ROW_PLAYER);
 		colValue = calculateBoardValue(COL_PLAYER);
+		//System.out.println("evaluation: row: " + rowValue + " col: " + colValue  + " groups: "+ groups.size());
 		if(player == ROW_PLAYER){
 			if(colValue != 0){
 				result = rowValue/colValue;
@@ -256,7 +257,7 @@ public class AnalyzedBoard {
 		int[] distances = new int[groups.size()];
 		queue.add(vertex);
 		vSet.add(vertex);
-		gradients[groups.indexOf(vertex)] = (int) Math.pow(2, 26);
+		gradients[groups.indexOf(vertex)] = (int) Math.pow(2, 16);
 		distances[groups.indexOf(vertex)] = 0;
 		while(!queue.isEmpty()){
 			curNode = queue.get(queue.size()-1);
@@ -370,7 +371,7 @@ public class AnalyzedBoard {
 		}
 		
 		
-		return (int) Math.max((gradients[uIndex] + gradients[vIndex])/2, 1) ;
+		return (gradients[uIndex] + gradients[vIndex])/2 ;
 	}
 	
 	

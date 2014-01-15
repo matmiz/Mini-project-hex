@@ -72,7 +72,7 @@ public class MinMaxGameTree {
 		int td = 1;
 		int movesLeft = board.getBoardEmptySize();
 		int terminalSize = movesLeft;
-		while((terminalSize = terminalSize*(movesLeft-td)) < this.leafSize){
+		while(((terminalSize = terminalSize*(movesLeft-td)) < this.leafSize) && (movesLeft-td>0)){
 			td++;
 		}
 		return td;
