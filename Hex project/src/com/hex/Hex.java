@@ -6,7 +6,7 @@ public class Hex {
 	
 	public static void main(String[] args) {
 
-		game = new HexGame((byte) 3, (byte) 3, (byte) 3, (byte)1, (byte)0, true);
+		game = new HexGame((byte) 3, (byte) 20000, (byte) -1, (byte)1, (byte)0, true);
 
 	}
 }

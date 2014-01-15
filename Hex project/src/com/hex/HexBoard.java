@@ -10,11 +10,9 @@ public class HexBoard {
 	public final byte ROW_PLAYER;
 	public final byte COL_PLAYER;
 	public final byte EMPTY;
-	public final static byte  BOARD_SIZE=4;
-	public final static byte  RADIUS=35;
 	private byte boardSize;
 	private final byte EVAL_STRENGHT;
-	
+	private byte emptyCells;
 	/**
 	 * Constructs a game board.
 	 * @param size The dimensions of the board
@@ -27,6 +25,7 @@ public class HexBoard {
 		EVAL_STRENGHT = evaluationStrenght;
 		this.boardSize =  (byte) size;
 		this.board = new byte[boardSize][boardSize];
+		this.emptyCells = (byte) (size*size);
 		
 		//fill the board with EMPTY
 		for(int i = 0; i < boardSize; i++){
@@ -37,6 +36,9 @@ public class HexBoard {
 		
 	}
 	
+	public int getBoardSize(){
+		return boardSize;
+	}
 	/**
 	 * Returns the color of the asked cell.
 	 * @param row
@@ -54,6 +56,9 @@ public class HexBoard {
 	 * @param color
 	 */
 	public void setColorAt(int row, int col, byte color){
+		if(color!=EMPTY){
+			this.emptyCells--;
+		}
 		board[row][col] = color;
 	}
 	
@@ -97,4 +102,23 @@ public class HexBoard {
 		}
 		System.out.print("\n");
 	}
+
+	public int getBoardEmptySize() {
+		return this.emptyCells;
+	}
+	
+	/**
+	 * Encodes the board to a unique hash value.
+	 * @return
+	 */
+	public int hashify(){
+		String s = "";
+		for(int i = 0; i<board.length; i++){
+			for(int j = 0; j<board.length; j++){
+				s+=(char) (board[i][j] & 0xFF);
+			}
+		}
+		return s.hashCode();
+	}
+	
 }

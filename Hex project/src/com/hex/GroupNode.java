@@ -2,7 +2,6 @@ package com.hex;
 
 import java.util.ArrayList;
 
-
 public class GroupNode {
 
 	private byte groupPlayer;

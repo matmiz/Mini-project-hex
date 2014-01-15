@@ -1,68 +1,45 @@
 package com.hex;
 
-import com.hex.view.BoardView;
-
-import android.app.Activity;
-import android.os.Bundle;
-import android.util.Log;
-
-public class HexGame extends Activity{
+public class HexGame {
 
 	private HexBoard board;
 	private MinMaxGameTree gameTree;
 	public static byte boardSize;
-	public static byte ME;
-	public static byte OPPONENT;
-	public static byte EMPTY;
-	public static boolean PLAYING; 
+	public final byte ME;
+	public final byte OPPONENT;
+	public final byte EMPTY;
 	private byte[] nextMove = new byte[3];
 	/**
 	 * Creates a hex game
 	 * @param size The size of the game board.
-	 * @param treeDepth The maximal depth of the game-tree.
+	 * @param treeSize The maximal number of leaves in the game tree(probably around 20000 is a good number
 	 * @param isComputerRowPlayer determines which of the players is the computer.
 	 * @param colPlayer player whos goal is to make <b>horizontal<b> path.
 	 * @param rowPlayer player whos goal is to make <b>vertical<b> path.
-	 * @param evaluationStrenght the depth of the BFS in the evaluation function.
+	 * @param evaluationStrenght the depth of the BFS in the evaluation function. set to -1 for unlimited depth.
 	 */
-	public HexGame(byte size, byte treeDepth, byte evaluationStrenght, byte rowPlayer, byte colPlayer, boolean isComputerRowPlayer) {
+	public HexGame(byte size, int treeSize, byte evaluationStrenght, byte rowPlayer, byte colPlayer, boolean isComputerRowPlayer) {
 		boardSize = size;
 		
 		if(isComputerRowPlayer){
-			HexGame.ME = rowPlayer;
-			HexGame.OPPONENT = colPlayer;
+			this.ME = rowPlayer;
+			this.OPPONENT = colPlayer;
 		}else{
-			HexGame.ME = colPlayer;
-			HexGame.OPPONENT = rowPlayer;
+			this.ME = colPlayer;
+			this.OPPONENT = rowPlayer;
+		}
+		
+		if(evaluationStrenght == -1){
+			evaluationStrenght = (byte) (boardSize*boardSize);
 		}
 		
 		//set EMPTY to by something different than colPlayer and rowPlayer
-		HexGame.EMPTY = (byte) (Math.abs(colPlayer)+Math.abs(rowPlayer)+1);
+		this.EMPTY = (byte) (Math.abs(colPlayer)+Math.abs(rowPlayer)+1);
 		
 		board = new HexBoard(size, rowPlayer, colPlayer, EMPTY, evaluationStrenght);
-		gameTree = new MinMaxGameTree(board.getCopy(),treeDepth, ME, OPPONENT, ME);
-	}
-	public HexGame(){
-		boardSize = HexBoard.BOARD_SIZE;
-		ME = 0;
-		OPPONENT = 1;
-		//set EMPTY to by something different than colPlayer and rowPlayer
-		HexGame.EMPTY = (byte) (Math.abs(1)+Math.abs(0)+1);
-		Log.d("hexgame","creating new game");
-		board = new HexBoard((byte)boardSize, (byte)ME, (byte)OPPONENT, EMPTY, (byte)5);
-		gameTree = new MinMaxGameTree(board.getCopy(),2, ME, OPPONENT, ME);		
+		gameTree = new MinMaxGameTree(board,treeSize, ME, OPPONENT, ME);
 	}
 	
-	
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		//board=new HexBoard(HexBoard.BOARD_SIZE, ME, OPPONENT, EMPTY, (byte)2);
-		Log.d("onCreate","creating new board view");
-		BoardView bView=new BoardView(this);//,board);
-		PLAYING=true;
-		setContentView(bView);
-	}
 	/**
 	 * Prints the current playing board
 	 */
@@ -114,7 +91,6 @@ public class HexGame extends Activity{
 		
 		//update the board.
 		board.setColorAt(nMove[0], nMove[1], ME);
-		
 		//evaluate the board for victory checking
 		if(board.evaluate(ME) == Double.MAX_VALUE){
 			nMove[2] = 1;

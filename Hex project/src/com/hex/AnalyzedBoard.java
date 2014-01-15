@@ -1,5 +1,4 @@
 package com.hex;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -63,34 +62,33 @@ public class AnalyzedBoard {
 	 * All he groups are stored in the ArrayList <b>this.groups</b>.
 	 */
 	private void analyzeBoard(){
-		GroupNode[][] helper = constructInitialGraph();;
-		if(upperSource == bottomSink){
-			rowValue = Double.MAX_VALUE;
-			colValue = 0;
-		}else if(leftSource == rightSink){
-			rowValue = 0;
-			colValue = Double.MAX_VALUE;
-		}else{
-			groups.add(upperSource);
-			groups.add(leftSource);
-			groups.add(bottomSink);
-			groups.add(rightSink);
-			rowPlayerGroups.add(upperSource);
-			rowPlayerGroups.add(bottomSink);
-			colPlayerGroups.add(leftSource);
-			colPlayerGroups.add(rightSink);
-			for(int i=0; i<board.length; i++){
-				for(int j=0; j<board.length; j++){
-					if(!groups.contains(helper[i][j])){
-						if(helper[i][j].getPlayer() == ROW_PLAYER){
-							rowPlayerGroups.add(helper[i][j]);
-						}else if(helper[i][j].getPlayer() == COL_PLAYER){
-							colPlayerGroups.add(helper[i][j]);
-						}else{
-							noPlayerGroups.add(helper[i][j]);
+		GroupNode[][] helper = constructInitialGraph();
+		
+		groups.add(upperSource);
+		groups.add(leftSource);
+		groups.add(bottomSink);
+		groups.add(rightSink);
+		rowPlayerGroups.add(upperSource);
+		rowPlayerGroups.add(bottomSink);
+		colPlayerGroups.add(leftSource);
+		colPlayerGroups.add(rightSink);
+		for(int i=0; i<board.length; i++){
+			for(int j=0; j<board.length; j++){
+				if(!groups.contains(helper[i][j])){
+					if(helper[i][j].getPlayer() == ROW_PLAYER){
+						if(helper[i][j].getNeighbors().contains(upperSource) && helper[i][j].getNeighbors().contains(bottomSink)){
+							this.rowValue = Double.MAX_VALUE;
 						}
-						groups.add(helper[i][j]);
+						rowPlayerGroups.add(helper[i][j]);
+					}else if(helper[i][j].getPlayer() == COL_PLAYER){
+						if(helper[i][j].getNeighbors().contains(leftSource) && helper[i][j].getNeighbors().contains(rightSink)){
+							this.colValue = Double.MAX_VALUE;
+						}
+						colPlayerGroups.add(helper[i][j]);
+					}else{
+						noPlayerGroups.add(helper[i][j]);
 					}
+					groups.add(helper[i][j]);
 				}
 			}
 		}
@@ -111,16 +109,13 @@ public class AnalyzedBoard {
 				curGroup = new GroupNode(board[i][j]);
 				
 				if(i==0){
-					if(board[i][j] == upperSource.getPlayer()){
-						curGroup = upperSource;
-					}else{
-						curGroup.addNeighbor(upperSource);
-						upperSource.addNeighbor(curGroup);
-					}
+					curGroup.addNeighbor(upperSource);
+					upperSource.addNeighbor(curGroup);
 				}else{		
 					neighbor = helper[i-1][j];
 					if((board[i][j] == neighbor.getPlayer()) && (board[i][j] != NO_PLAYER)){
-						curGroup = helper[i-1][j];
+						neighbor.uniteGroups(curGroup);
+						curGroup = neighbor;
 					}else{
 						curGroup.addNeighbor(neighbor);
 						neighbor.addNeighbor(curGroup);
@@ -128,13 +123,8 @@ public class AnalyzedBoard {
 				}
 				
 				if(j==0){
-					if(board[i][j] == leftSource.getPlayer()){
-						leftSource.uniteGroups(curGroup);
-						curGroup = leftSource;
-					}else{
-						curGroup.addNeighbor(leftSource);
-						leftSource.addNeighbor(curGroup);
-					}
+					curGroup.addNeighbor(leftSource);
+					leftSource.addNeighbor(curGroup);
 				}else{
 					neighbor = helper[i][j-1];
 					if((board[i][j] == neighbor.getPlayer()) && (board[i][j] != NO_PLAYER)){
@@ -147,29 +137,13 @@ public class AnalyzedBoard {
 				}
 				
 				if(i==board.length-1){
-					if(board[i][j] == bottomSink.getPlayer()){
-						bottomSink.uniteGroups(curGroup);
-						if(curGroup == upperSource){
-							upperSource = bottomSink;
-						}
-						curGroup = bottomSink;
-					}else{
-						curGroup.addNeighbor(bottomSink);
-						bottomSink.addNeighbor(curGroup);
-					}
+					curGroup.addNeighbor(bottomSink);
+					bottomSink.addNeighbor(curGroup);
 				}
 				
 				if(j==board.length-1){
-					if(board[i][j] == rightSink.getPlayer()){
-						rightSink.uniteGroups(curGroup);
-						if(curGroup == leftSource){
-							leftSource = rightSink;
-						}
-						curGroup = rightSink;
-					}else{
-						curGroup.addNeighbor(rightSink);
-						rightSink.addNeighbor(curGroup);
-					}
+					curGroup.addNeighbor(rightSink);
+					rightSink.addNeighbor(curGroup);
 				}
 				
 				if( (i != 0) && (j != board.length-1) ){
@@ -189,6 +163,12 @@ public class AnalyzedBoard {
 		return helper;
 	}
 	
+	/**
+	 * calculates the value o the board for player.<br>
+	 * Higher value means that the board is better for the player.
+	 * @param player
+	 * @return vakue of the board.
+	 */
 	public double getBoardValue(byte player){
 		double result;
 		if(player == ROW_PLAYER){
@@ -224,6 +204,11 @@ public class AnalyzedBoard {
 		return result;
 	}
 
+	/**
+	 * Calculates the value of the board from the points of view of player
+	 * @param player
+	 * @return valueof the board.
+	 */
 	private double calculateBoardValue(byte player) {
 		//run bfs from each player group
 		//run edmonds-karp to determine max-flow
@@ -237,6 +222,11 @@ public class AnalyzedBoard {
 		return result;
 	}
 
+	/**
+	 * Runs BFS for each group of the player.
+	 * @param player
+	 * @return gradients matrix.
+	 */
 	private int[] getVertexGradient(byte player) {
 		int [] gradients = new int[groups.size()];
 		if(player == ROW_PLAYER){
@@ -251,6 +241,12 @@ public class AnalyzedBoard {
 		return gradients;
 	}
 
+	/**
+	 * performs BFS run on the graph, populating the gradients matrix.
+	 * @param player
+	 * @param vertex
+	 * @param gradients
+	 */
 	private void BFS(byte player, GroupNode vertex, int[] gradients) {
 		int nodeIndex;
 		int fatherIndex;
@@ -260,7 +256,7 @@ public class AnalyzedBoard {
 		int[] distances = new int[groups.size()];
 		queue.add(vertex);
 		vSet.add(vertex);
-		gradients[groups.indexOf(vertex)] = (int) Math.pow(2,16);
+		gradients[groups.indexOf(vertex)] = (int) Math.pow(2, 26);
 		distances[groups.indexOf(vertex)] = 0;
 		while(!queue.isEmpty()){
 			curNode = queue.get(queue.size()-1);
@@ -285,17 +281,24 @@ public class AnalyzedBoard {
 			}
 		}
 	}
+	
+	/**
+	 * Calculates the magnitude of the gradient.
+	 * @param distance distance from the source
+	 * @param sourcePower the power of the source.
+	 * @return the strength of the gradient.
+	 */
 	private int calcGradient(int distance, int sourcePower){
 		return (int) Math.pow(sourcePower,(1/(Math.pow(2, Math.log(distance+1)/Math.log(2)))));
 	}
 	
 	/**
-	 * Finds the maximum flow in a flow network.
-	 * @param E neighbour lists
-	 * @param C capacity matrix (must be n by n)
-	 * @param s source
-	 * @param t sink
-	 * @return maximum flow
+	 * Calculates the maximum flow.
+	 * @param gradients gradient matrix of the nodes.
+	 * @param s source node,
+	 * @param t sink node/.
+	 * @param player player for whom the flow is performed.
+	 * @return the maximum flow.
 	 */
     private int edmondsKarp(int[] gradients, GroupNode s, GroupNode t, byte player) {
         int n = groups.size();
@@ -350,6 +353,14 @@ public class AnalyzedBoard {
         }
     }
 
+    /**
+     * Calculates the flow capacity between nodes, based on the gradient matrx.
+     * @param uIndex first node;
+     * @param vIndex second node;
+     * @param gradients gradients matrix.
+     * @param player player for whom the capacity is calculated.
+     * @return capacity of the edge between the two given nodes.
+     */
 	private int getCapacity(int uIndex, int vIndex, int[] gradients, byte player) {
 		if((groups.get(uIndex).getPlayer() != NO_PLAYER) && (groups.get(uIndex).getPlayer() != player)){
 			return 0;
@@ -357,7 +368,9 @@ public class AnalyzedBoard {
 		if((groups.get(vIndex).getPlayer() != NO_PLAYER) && (groups.get(vIndex).getPlayer() != player)){
 			return 0;
 		}
-		return (gradients[uIndex] + gradients[vIndex])/2 ;
+		
+		
+		return (int) Math.max((gradients[uIndex] + gradients[vIndex])/2, 1) ;
 	}
 	
 	

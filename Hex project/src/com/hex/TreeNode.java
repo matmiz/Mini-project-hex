@@ -27,112 +27,129 @@ public class TreeNode {
 	}
 
 	/**
-	 * Builds sub tree for the current node.
-	 * @param curDepth the current depth in the tree.
-	 * @return this node.
+	 * searches the children of the root for the child that is reponsible for roots evaluation.
+	 * @return
 	 */
-	public TreeNode buildSubTree(int curDepth) {
-		TreeNode optimalNode = this;
-		TreeNode curNode = this;
-		double optimalVal;
-		//check if we should build subtree at all
-		if(curDepth>0){
-			//if we dont have children list, then this is a leaf and subtree generation should take place.
-			if(children==null){
-				curNode = generateSubTree(curDepth);
-				this.evaluation = curNode.evaluation;
-				if(this == tree.getRoot()){
-					return curNode;
-				}
-				return this;
-			}else{
-				if(movement[2] == tree.max){
-					optimalVal = Float.MAX_VALUE;
-				}else{
-					optimalVal = 0;
-				}
-				//make children build their own subtrees
-				for(TreeNode tn : children){
-					curNode = tn.buildSubTree(curDepth-1);
-					if(movement[2] == tree.max){
-						if(curNode.evaluation<optimalVal){
-							optimalVal = curNode.evaluation;
-							optimalNode = curNode;
-						}
-					}else{
-						if(curNode.evaluation>optimalVal){
-							optimalVal = curNode.evaluation;
-							optimalNode = curNode;
-						}
-					}
-				}
-				this.evaluation = optimalVal;
-				if(this == tree.getRoot()){
-					return optimalNode;
-				}
-				return this;
+	public byte[] getOptimalMovement(){
+		byte[] result = null;
+		for(TreeNode tn : tree.getRoot().children){
+			if(tree.getRoot().evaluation == tn.evaluation){
+				result = tn.movement;
+				break;
 			}
 		}
-		this.evaluation = board.evaluate(tree.max);
-		return this;
+		return result;	
 	}
-
+	
 	/**
-	 * Heavy and time consuming operation:<br>
-	 * The current node will generate its own subtree while calculating the optimal node for the MAX player.
-	 * @param curDepth the current tree depth.
-	 * @return the optimal node for the MAX player.
+	 * Completes the tree up to the needed depth while calculating the optimal value;
+	 * @param curDepth
+	 * @param alpha
+	 * @param beta
+	 * @param evaluate
+	 * @return
 	 */
-	private TreeNode generateSubTree(int curDepth) {
-		byte nextColor;
-		HexBoard childBoard;
-		TreeNode childNode;
-		TreeNode optimalNode = this;
-		TreeNode curNode = this;
-		double optimalValue;
+	public double buildSubtreeAlphaBeta(int curDepth, double alpha, double beta, boolean evaluate){
+		HexBoard newBoard;
+		TreeNode newNode;
+		byte nextMove = (this.movement[2]==tree.max? tree.min : tree.max);
 		double curValue;
-		children = new ArrayList<TreeNode>();
-		
-		if(movement[2] == tree.min){
-			nextColor = tree.max;
-		}else{
-			nextColor = tree.min;
+		int boardHash;
+		//if its a leaf, evaluate it directly and return that node
+		if(curDepth == 0) {
+			//we dont have to evaluate anything if the current player is the minimizer.
+			if(tree.getRoot().movement[2] == tree.max || !evaluate){
+				this.evaluation = 0;
+			}else{
+				boardHash = board.hashify();
+				if(tree.hm.containsKey(boardHash)){
+					this.evaluation = tree.hm.get(boardHash);
+				}else{
+					this.evaluation = board.evaluate(tree.max);
+					tree.hm.put(boardHash, this.evaluation);
+				}
+			}
+			return this.evaluation;
 		}
 		
+		//its not a leaf.
 		
-		if(nextColor == tree.min){
-			optimalValue = Float.MAX_VALUE;
+		if(nextMove == tree.max){
+			curValue = Double.NEGATIVE_INFINITY;
 		}else{
-			optimalValue = 0;
+			curValue = Double.POSITIVE_INFINITY;
 		}
+
+		//if children == null, that means that this node was previously a leaf, thus need to generate its own leaves
+		if(this.children == null){
+			
+			if(board.getBoardEmptySize() == 0){
+				this.evaluation = this.board.evaluate(tree.max);
+				return this.evaluation;
+			}
+
+			this.children = new ArrayList<TreeNode>(board.getBoardEmptySize());
+			for(int i = 0; i < board.getBoardSize(); i++){
+				for(int j = 0; j < board.getBoardSize(); j++){
+					if(board.getColorAt(i, j) == board.EMPTY){
+						newBoard = board.getCopy();
+						newBoard.setColorAt(i, j, nextMove);
+						newNode = new TreeNode(newBoard, (byte)i, (byte)j, nextMove, tree);
+						children.add(newNode);
+						curValue = prunAlphaBeta(newNode, alpha, beta,curDepth, curValue, nextMove);	
+					}
+				}
+			}
+			this.board = null;
+			
+		}else{
+			for(TreeNode tn : this.children){
+				curValue = prunAlphaBeta(tn, alpha, beta, curDepth, curValue, nextMove);	
+			}
+		}
+		this.evaluation = curValue;
+		return curValue;
 		
-		for(byte i = 0; i<HexGame.boardSize; i++){
-			for(byte j = 0; j<HexGame.boardSize; j++){
-				if(board.getColorAt(i, j) == board.EMPTY){
-					childBoard = board.getCopy();
-					childBoard.setColorAt(i, j, nextColor);
-					childNode = new TreeNode(childBoard, i, j, nextColor, this.tree);
-					children.add(childNode);
-					curNode = childNode.buildSubTree(curDepth-1);
-					curValue = curNode.evaluation;
-					if(nextColor == tree.min){
-						if(optimalValue > curValue) {
-							optimalValue = curValue;
-							optimalNode = curNode;
-						}
-					}else{
-						if(optimalValue<curValue) {
-							optimalValue = curValue;
-							optimalNode = curNode;
-						}
+	}
+	
+	/**
+	 * helper function for buildSubtreeAlphaBeta function.
+	 * @param tn
+	 * @param alpha
+	 * @param beta
+	 * @param curDepth
+	 * @param curValue
+	 * @param nextMove
+	 * @return
+	 */
+	private double prunAlphaBeta(TreeNode tn, double alpha, double beta, int curDepth, double curValue, byte nextMove){
+		double childValue;
+		if(Double.isInfinite(curValue)){
+			curValue = tn.buildSubtreeAlphaBeta(curDepth-1, alpha, beta, true);
+		}else{
+			if(nextMove == tree.max){
+				if(curValue>beta){
+					tn.buildSubtreeAlphaBeta(curDepth-1, curValue, beta, false);
+				}else{
+					childValue = tn.buildSubtreeAlphaBeta(curDepth-1, curValue, beta, true);
+					if(childValue>curValue){
+						curValue = childValue;
+					}
+				}
+			}else{
+				if(curValue<alpha){
+					tn.buildSubtreeAlphaBeta(curDepth-1, alpha, curValue, false);
+				}else{
+					childValue = tn.buildSubtreeAlphaBeta(curDepth-1, alpha, curValue, true);
+					if(childValue<curValue){
+						curValue = childValue;
 					}
 				}
 			}
 		}
-		this.board = null;
-		return optimalNode;
+		return curValue;
 	}
-
+	
 	/**
 	 * Prints the board of this node.
 	 * @param depth used for indentation. 0 at the beginning.
@@ -157,10 +174,18 @@ public class TreeNode {
 			for(TreeNode s : children){
 				size += s.getSize();
 			}
+		}else{
+			size = 1;
 		}
-		return (size+1);
+		return size;
 	}
 
+	/**
+	 * Searches the children of the current node for the child that corresponds to the given movement.
+	 * @param i
+	 * @param j
+	 * @return
+	 */
 	public TreeNode getChildWithMovement(int i, int j) {
 		for(TreeNode tn : this.children){
 			if((tn.movement[0] == i) && (tn.movement[1] == j)){
@@ -172,5 +197,9 @@ public class TreeNode {
 
 	public void attachChild(TreeNode tn) {
 		this.children.add(tn);
+	}
+	
+	public HexBoard getBoard(){
+		return this.board;
 	}
 }
